@@ -154,9 +154,10 @@ form.input-fines button:hover {
     transition: background-color 0.3s ease;
 }
 
-.more {
-    background-color: #2785B7;
+.more:hover {
+    background-color: #1a5d85;
 }
+
 
 /* Стили для кнопки и цены */
 .card-body div h5 {
@@ -236,67 +237,79 @@ form .add-to-order:hover {
 .overview-table-row {
     display: flex;
     flex-direction: column;
+    align-items: center; /* Центровка карточек по горизонтали */
     gap: 15px;
-    margin-left: 100px;
-    margin-right: 100px;
     margin-top: 30px;
 }
 
 .overview-card-container {
     display: flex;
-    border: 1px solid #2785B7;
-    padding: 15px;
-    border-radius: 0; /* Острые края */
+    justify-content: space-between;
     align-items: center;
+    border: 1px solid #2785B7;
+    padding: 10px;
     background-color: #fff;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    width: 95%; /* Увеличиваем ширину карточки */
+    max-width: 1000px; /* Максимальная ширина карточки */
 }
 
 .overview-card-image {
     flex-shrink: 0;
-    margin-right: 20px;
-    border-radius: 5px;
+    margin-right: 10px; /* Уменьшаем отступ справа от изображения */
 }
 
-.overview-card-image img{
+.overview-card-image img {
     border-radius: 5px;
-    width: 135px;
-    height: 135px;
+    width: 100px; /* Размер изображения */
+    height: 100px;
 }
 
 .overview-card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     flex-grow: 1;
 }
 
 .overview-card-title {
-    font-size: 1.2rem;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.overview-card-text {
     font-size: 1rem;
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.overview-card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    font-weight: bold;
+    margin-bottom: 5px; /* Уменьшаем отступ под заголовком */
 }
 
 .overview-card-link {
     background-color: #2785B7;
     color: white;
-    padding: 8px 16px;
+    padding: 6px 12px;
     text-decoration: none;
-    border-radius: 0; /* Острые края */
+    width: max-content;
+    transition: background-color 0.3s ease;
 }
 
 .overview-card-link:hover {
-    background-color: #2785B7;
+    background-color: #1a5d85;
 }
+
+.overview-card-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.overview-card-info p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.overview-card-info h5 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
 /* корзина */
 .cart-icon {
     position: fixed;

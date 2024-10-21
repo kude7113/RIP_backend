@@ -1,5 +1,5 @@
 DROP TABLE fines CASCADE;
-DROP TABLE fine_resolutions CASCADE;
+DROP TABLE fine_resolutionfdrs CASCADE;
 DROP TABLE users CASCADE;
 DROP TABLE resolutions CASCADE;
 

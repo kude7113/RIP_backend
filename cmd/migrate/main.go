@@ -21,8 +21,8 @@ func main() {
 	if err = db.AutoMigrate(
 		&ds.Fines{},
 		&ds.Resolutions{},
-		&ds.Fine_Resolution{},
-		&ds.User{},
+		&ds.Fine_Resolutions{},
+		&ds.Users{},
 	); err != nil {
 		println("cant migrate db")
 	}

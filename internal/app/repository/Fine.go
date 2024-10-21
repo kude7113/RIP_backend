@@ -47,7 +47,7 @@ func (r *Repository) GetResolutionLength(userId int) (int64, error) {
 
 	reqID := req.Resolution_ID
 
-	err := r.db.Model(&ds.Fine_Resolution{}).Where("Resolution_id = ?", reqID).Count(&count).Error
+	err := r.db.Model(&ds.Fine_Resolutions{}).Where("Resolution_id = ?", reqID).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -107,7 +107,7 @@ func (r *Repository) AddFinesToResolution(userID, fineID int) error {
 	}
 
 	// Добавляем элемент в существующую заявку (или новую)
-	fineRes := ds.Fine_Resolution{
+	fineRes := ds.Fine_Resolutions{
 		Fine_ID:       fineID,
 		Resolution_ID: draftRequest.Resolution_ID,
 	}
@@ -132,7 +132,7 @@ func (r *Repository) GetFinesInResolutionById(resID int) (*[]FinesWithCount, err
 	var finesWithCount []FinesWithCount
 
 	// Получаем все записи Fine_Resolution для заданного resID
-	var finesResolution []ds.Fine_Resolution
+	var finesResolution []ds.Fine_Resolutions
 	err := r.db.Where("resolution_id = ?", resID).Find(&finesResolution).Error
 	if err != nil {
 		return nil, err
@@ -164,15 +164,34 @@ func (r *Repository) GetFinesInResolutionById(resID int) (*[]FinesWithCount, err
 }
 
 func (r *Repository) DeleteResolutionById(resID int) error {
-	if err := r.db.Delete(&ds.Fine_Resolution{}, resID).Error; err != nil {
-		return err
+	// Открытие транзакции для удаления
+	tx := r.db.Begin()
+
+	defer func() {
+		if tx.Error != nil {
+			tx.Rollback() // Откат транзакции при ошибке
+		} else {
+			tx.Commit() // Подтверждение транзакции, если ошибок нет
+		}
+	}()
+
+	// Удаление записи из таблицы Fine_Resolution
+	deleteQuery := "DELETE FROM fine_resolutions WHERE fin_res_id = ?"
+	tx = tx.Exec(deleteQuery, resID) // Только одно возвращаемое значение
+
+	// Проверка на наличие ошибок после выполнения запроса
+	if tx.Error != nil {
+		return fmt.Errorf("failed to delete fine_resolution: %v", tx.Error)
 	}
 
-	err := r.db.Model(&ds.Resolutions{}).
-		Where("resolution_id = ?", resID).
-		Update("status", ds.DeletedStatus).Error
-	if err != nil {
-		return err
+	// Обновление статуса в таблице Resolutions
+	updateQuery := "UPDATE resolutions SET status = ? WHERE resolution_id = ?"
+	tx = tx.Exec(updateQuery, ds.DeletedStatus, resID) // Только одно возвращаемое значение
+
+	// Проверка на наличие ошибок после выполнения запроса
+	if tx.Error != nil {
+		return fmt.Errorf("failed to update resolution status: %v", tx.Error)
 	}
+
 	return nil
 }

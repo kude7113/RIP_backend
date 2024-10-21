@@ -1,6 +1,6 @@
 package ds
 
-type User struct {
+type Users struct {
 	User_ID  uint   `json:"id" gorm:"primaryKey"`
 	Login    string `json:"login" gorm:"type:varchar(255)"`
 	Password string `json:"-" gorm:"type:varchar(255)"`

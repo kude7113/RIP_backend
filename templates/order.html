@@ -38,12 +38,11 @@
         </div>
         <div class="overview-card-content">
             <h5 class="overview-card-title">{{ .Title }}</h5>
-            <p class="overview-card-text">{{ .FullInf }}</p>
-            <div class="overview-card-footer">
-                <h5>{{ .Price }} ₽</h5>
-                <p>{{ .DopInf }} {{ .Count }}</p>
-                <a href="http://localhost:8000/more/{{ .Fine_ID }}" class="overview-card-link">Подробнее</a>
-            </div>
+            <a href="http://localhost:8000/more/{{ .Fine_ID }}" class="overview-card-link">Подробнее</a>
+        </div>
+        <div class="overview-card-info">
+            <p>{{ .DopInf }} {{ .Count }}</p>
+            <h5>{{ .Price }} ₽</h5>
         </div>
     </div>
     {{ end }}
