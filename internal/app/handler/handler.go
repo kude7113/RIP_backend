@@ -18,12 +18,51 @@ func NewHandler(l *logrus.Logger, r *repository.Repository) *Handler {
 	}
 }
 
+const (
+	FineDomain       = "/fine"
+	ResolutionDomain = "/resolution"
+	FinResDomain     = "/fr"
+	UserDomain       = "/user"
+)
+
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/", h.AllFines)
-	router.GET("/more/:id", h.FinesByID)
-	router.POST("/delete/:id", h.DeleteResolution)
-	router.POST("/add/:id", h.AddFinesToRes)
-	router.GET("/resolution/:id", h.GetResolution)
+	/*
+		router.GET("/", h.AllFines)
+		router.GET("/more/:id", h.FinesByID)
+		router.POST("/delete/:id", h.DeleteResolution)
+		router.POST("/add/:id", h.AddFinesToRes)
+		router.GET("/resolution/:id", h.GetResolution)
+	*/
+
+	// домен услуги /Fines
+	router.GET(FineDomain, h.AllFines)               // Список штрафов
+	router.GET(FineDomain+"/:id", h.FinesByID)       // Штраф по ID
+	router.POST(FineDomain+"/create", h.CreateFines) // Добавление штрафа
+	/*
+		router.POST(FineDomain+"/img/:id", h.UploadImage)          // Добавление или замена изображения
+		router.PUT(FineDomain+"/update/:id", h.UpdateFines)        // Редактирование штрафа
+		router.DELETE(FineDomain+"/delete/:id", h.DeleteFines)     // Удаление штрафа
+		router.POST(FineDomain+"/add/:id", h.AddFinesToResolution) // Добавление штрафа в последнее постановление
+
+		// домен заявки /Resolutions
+		router.GET(ResolutionDomain, h.AllResolution)                    // Список постановлений
+		router.GET(ResolutionDomain+"/:id", h.ResolutionByID)            // Постановление по ID
+		router.PUT(ResolutionDomain+"/update/:id", h.UpdateResolution)   // Редактирование постановления
+		router.PUT(ResolutionDomain+"/form/:id", h.SetStatusByUser)      // Изменение статуса создателем
+		router.PUT(ResolutionDomain+"/complete/:id", h.SetStatusByAdmin) // Изменение статуса админом
+		router.DELETE(ResolutionDomain+"delete/:id", h.DeleteResolution) // Удаление постановления
+
+		// домен м-м
+		router.DELETE(FinResDomain+"/delete/:id", h.DeleteFR)  // Удаление из Fin_Res
+		router.PUT(FinResDomain+"/count/:id", h.UpdateFRCount) // Удаление из Fin_Res
+
+		// домен пользователя
+		router.POST(UserDomain, h.CreateUser)
+		router.PUT(UserDomain+"/update", h.UpdateUser)
+		router.POST(UserDomain+"/auth", h.AuthUser)
+		router.POST(UserDomain+"/logout", h.LogoutUser)
+
+	*/
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

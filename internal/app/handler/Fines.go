@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"RIP/internal/app/ds"
+	"RIP/internal/app/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -13,38 +15,35 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 	searchFines := ctx.Query("searchFines")
 
 	userId := 1
-	resCount, _ := h.Repository.GetResolutionLength(userId)
-	resID, _ := h.Repository.ResolutionByUserID(userId)
+
+	resCount, err := h.Repository.GetResolutionLength(userId)
+	resID, err := h.Repository.ResolutionByUserID(userId)
+
+	var fines *[]ds.Fines
 	if searchFines == "" {
-		fines, err := h.Repository.GetAllFines()
+		fines, err = h.Repository.GetAllFines()
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
-		ctx.HTML(http.StatusOK, "home.html", gin.H{
-			"fines":      fines,
-			"searchText": searchFines,
-			"number":     resCount,
-			"resID":      resID,
-		})
-		return
+	} else {
+		fines, err = h.Repository.SearchFines(searchFines)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
 	}
-	fines, err := h.Repository.SearchFines(searchFines)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-	ctx.HTML(http.StatusOK, "home.html", gin.H{
-		"fines":      fines,
-		"searchText": searchFines,
-		"number":     resCount,
-		"resID":      resID,
-	})
 
+	answer := models.FinesListWithRes{
+		Fines:    fines,
+		ResCount: resCount,
+		ResID:    resID,
+	}
+	ctx.JSON(http.StatusOK, answer)
 }
 
 func (h *Handler) FinesByID(ctx *gin.Context) {
@@ -64,62 +63,25 @@ func (h *Handler) FinesByID(ctx *gin.Context) {
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "more.html", gin.H{
-		"fine": fine,
-	})
+	ctx.JSON(http.StatusOK, fine)
 }
 
-func (h *Handler) AddFinesToRes(ctx *gin.Context) {
-	fineID, err := strconv.Atoi(ctx.Param("id"))
+func (h *Handler) CreateFines(ctx *gin.Context) {
+	var request ds.Fines
+	err := ctx.BindJSON(&request)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid fine ID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
-	userID := 1
-	h.Logger.Infof("Start adding fine ID: %d to user ID: %d", fineID, userID)
-
-	err = h.Repository.AddFinesToResolution(userID, fineID)
+	newFine, err := h.Repository.CreateFine(request)
 	if err != nil {
-		h.Logger.Errorf("Error adding fine to resolution: %v", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
-
-	h.Logger.Infof("Successfully added fine ID: %d to user ID: %d", fineID, userID)
-	ctx.Redirect(http.StatusFound, "/")
-}
-
-func (h *Handler) GetResolution(ctx *gin.Context) {
-	resID, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid resID"})
-	}
-
-	finesWithCount, err := h.Repository.GetFinesInResolutionById(resID)
-	println(err)
-	if err != nil {
-		ctx.Redirect(http.StatusFound, "/")
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	ctx.HTML(http.StatusOK, "order.html", gin.H{
-		"fine":  finesWithCount,
-		"resID": resID,
-	})
-}
-
-func (h *Handler) DeleteResolution(ctx *gin.Context) {
-	resID, err := strconv.Atoi(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid resID"})
-	}
-
-	err = h.Repository.DeleteResolutionById(resID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	}
-
-	ctx.Redirect(http.StatusFound, "/")
+	ctx.JSON(http.StatusCreated, newFine)
 }
