@@ -67,7 +67,7 @@ func (h *Handler) FinesByID(ctx *gin.Context) {
 }
 
 func (h *Handler) CreateFines(ctx *gin.Context) {
-	var request ds.Fines
+	var request *ds.Fines
 	err := ctx.BindJSON(&request)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -84,4 +84,47 @@ func (h *Handler) CreateFines(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusCreated, newFine)
+}
+
+func (h *Handler) UpdateFines(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	var request *ds.Fines
+	err = ctx.BindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	request.Fine_ID = id
+	updateFine, err := h.Repository.UpdateFine(request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	ctx.JSON(http.StatusOK, updateFine)
+}
+
+func (h *Handler) DeleteFines(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	err = h.Repository.DeleteFine(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Deleted",
+	})
 }

@@ -38,10 +38,11 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET(FineDomain, h.AllFines)               // Список штрафов
 	router.GET(FineDomain+"/:id", h.FinesByID)       // Штраф по ID
 	router.POST(FineDomain+"/create", h.CreateFines) // Добавление штрафа
+	// router.POST(FineDomain+"/img/:id", h.UploadImage) // Добавление или замена изображения
+	router.PUT(FineDomain+"/update/:id", h.UpdateFines)    // Редактирование штрафа
+	router.DELETE(FineDomain+"/delete/:id", h.DeleteFines) // Удаление штрафа
+
 	/*
-		router.POST(FineDomain+"/img/:id", h.UploadImage)          // Добавление или замена изображения
-		router.PUT(FineDomain+"/update/:id", h.UpdateFines)        // Редактирование штрафа
-		router.DELETE(FineDomain+"/delete/:id", h.DeleteFines)     // Удаление штрафа
 		router.POST(FineDomain+"/add/:id", h.AddFinesToResolution) // Добавление штрафа в последнее постановление
 
 		// домен заявки /Resolutions

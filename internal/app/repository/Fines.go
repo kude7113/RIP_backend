@@ -3,6 +3,7 @@ package repository
 import (
 	"RIP/internal/app/ds"
 	"errors"
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"strings"
 )
@@ -68,5 +69,31 @@ func (r *Repository) GetFinesByID(id int) (*ds.Fines, error) {
 }
 
 func (r *Repository) CreateFine(fines *ds.Fines) (*ds.Fines, error) {
-	
+	result := r.db.Create(fines)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return fines, nil
+}
+
+func (r *Repository) UpdateFine(delivery *ds.Fines) (*ds.Fines, error) {
+	validate := validator.New()
+	if err := validate.Struct(delivery); err != nil {
+		return nil, err
+	}
+
+	// Обновляем все поля, кроме поля Image
+	if err := r.db.Model(&ds.Fines{}).Omit("Image").Where("fine_id = ?", delivery.Fine_ID).Updates(delivery).Error; err != nil {
+		return nil, err
+	}
+
+	return delivery, nil
+}
+
+func (r *Repository) DeleteFine(id int) error {
+	err := r.db.Delete(&ds.Fines{}, "Fine_ID = ?", id).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
