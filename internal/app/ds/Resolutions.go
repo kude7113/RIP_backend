@@ -18,4 +18,5 @@ const (
 	FormedStatus    = "сформирован"
 	CompletedStatus = "завершен"
 	RejectedStatus  = "отклонен"
+	ApprovedStatus  = "подтвержден"
 )

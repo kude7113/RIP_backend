@@ -128,3 +128,143 @@ func (h *Handler) DeleteFines(ctx *gin.Context) {
 		"message": "Deleted",
 	})
 }
+
+func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
+	userID := 1
+	fineID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	err = h.Repository.AddFinesToResolution(userID, fineID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "added",
+	})
+}
+
+func (h *Handler) AllResolutions(ctx *gin.Context) {
+	allRes, err := h.Repository.ResolutionsList()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	ctx.JSON(http.StatusOK, allRes)
+}
+
+func (h *Handler) ResolutionByID(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	result, err := h.Repository.GetResByID(id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) UpdateResolution(ctx *gin.Context) {
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	var request *ds.Resolutions
+	err = ctx.BindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+	request.Resolution_ID = id
+	updateRes, err := h.Repository.UpdateRes(request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+	ctx.JSON(http.StatusOK, updateRes)
+}
+
+func (h *Handler) SetStatusByUser(ctx *gin.Context) {
+	userID := 1
+
+	result, err := h.Repository.SetStatusByUser(userID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
+	resID, err := strconv.Atoi(ctx.Param("id"))
+	newStatus := ds.ApprovedStatus
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	result, err := h.Repository.SetStatusByAdmin(resID, newStatus)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) DeleteResolution(ctx *gin.Context) {
+	resID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	result, err := h.Repository.DeleteResolution(resID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) DeleteFR(ctx *gin.Context) {
+	resFID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	err = h.Repository.DeleteFR(resFID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message": "Deleted",
+	})
+}

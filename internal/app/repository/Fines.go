@@ -3,14 +3,19 @@ package repository
 import (
 	"RIP/internal/app/ds"
 	"errors"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 	"strings"
+	"time"
 )
 
 func (r *Repository) GetAllFines() (*[]ds.Fines, error) {
 	var deliveryItems []ds.Fines
-	r.db.Model(&ds.Fines{}).Find(&deliveryItems)
+	err := r.db.Model(&ds.Fines{}).Find(&deliveryItems).Error
+	if err != nil {
+		return nil, err
+	}
 	return &deliveryItems, nil
 }
 
@@ -76,22 +81,155 @@ func (r *Repository) CreateFine(fines *ds.Fines) (*ds.Fines, error) {
 	return fines, nil
 }
 
-func (r *Repository) UpdateFine(delivery *ds.Fines) (*ds.Fines, error) {
+func (r *Repository) UpdateFine(fine *ds.Fines) (*ds.Fines, error) {
 	validate := validator.New()
-	if err := validate.Struct(delivery); err != nil {
+	if err := validate.Struct(fine); err != nil {
 		return nil, err
 	}
 
 	// Обновляем все поля, кроме поля Image
-	if err := r.db.Model(&ds.Fines{}).Omit("Image").Where("fine_id = ?", delivery.Fine_ID).Updates(delivery).Error; err != nil {
+	if err := r.db.Model(&ds.Fines{}).Omit("Image").Where("fine_id = ?", fine.Fine_ID).Updates(fine).Error; err != nil {
 		return nil, err
 	}
 
-	return delivery, nil
+	return fine, nil
 }
 
 func (r *Repository) DeleteFine(id int) error {
 	err := r.db.Delete(&ds.Fines{}, "Fine_ID = ?", id).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *Repository) AddFinesToResolution(userID, fineID int) error {
+	// Поиск существующей заявки пользователя со статусом 'черновик'
+	var draftRequest ds.Resolutions
+	err := r.db.Where("user_id = ? AND status = ?", userID, ds.DraftStatus).First(&draftRequest).Error
+
+	// Если черновик не найден, создаём новый
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		draftRequest = ds.Resolutions{
+			User_ID:      userID,
+			Status:       ds.DraftStatus,
+			Date_Created: time.Now(),
+		}
+
+		// Создание новой записи
+		err = r.db.Create(&draftRequest).Error
+		if err != nil {
+			return fmt.Errorf("error creating new draft request: %w", err)
+		}
+
+		r.logger.Infof("Created new draft request ID: %d for user ID: %d", draftRequest.Resolution_ID, userID)
+	} else if err != nil {
+		// Если произошла ошибка запроса, возвращаем её
+		return fmt.Errorf("error fetching draft request: %w", err)
+	} else {
+		r.logger.Infof("Found existing draft request ID: %d for user ID: %d", draftRequest.Resolution_ID, userID)
+	}
+
+	// Добавляем элемент в существующую заявку (или новую)
+	fineRes := ds.Fine_Resolutions{
+		Fine_ID:       fineID,
+		Resolution_ID: draftRequest.Resolution_ID,
+	}
+
+	// Вставляем в базу данных
+	err = r.db.Create(&fineRes).Error
+	if err != nil {
+		return fmt.Errorf("error linking fine to draft request: %w", err)
+	}
+
+	r.logger.Infof("Fine ID: %d successfully added to Resolution ID: %d", fineID, draftRequest.Resolution_ID)
+
+	return nil
+}
+
+func (r *Repository) ResolutionsList() (*[]ds.Resolutions, error) {
+	var result []ds.Resolutions
+
+	err := r.db.Model(&ds.Resolutions{}).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *Repository) GetResByID(id int) (*ds.Resolutions, error) {
+	var result ds.Resolutions
+
+	err := r.db.First(&result, "resolution_id = ?", id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *Repository) UpdateRes(resolution *ds.Resolutions) (*ds.Resolutions, error) {
+	validate := validator.New()
+	if err := validate.Struct(resolution); err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Model(&ds.Resolutions{}).Where("resolution_id = ?", resolution.Resolution_ID).Updates(resolution).Error; err != nil {
+		return nil, err
+	}
+
+	return resolution, nil
+}
+
+func (r *Repository) SetStatusByUser(userID int) (*ds.Resolutions, error) {
+	// проверко является ли user владельцем данного постановления
+	var result ds.Resolutions
+	err := r.db.Where("user_id = ? AND status = ?", userID, ds.DraftStatus).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result.Status = ds.FormedStatus
+	if err := r.db.Save(&result).Error; err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *Repository) SetStatusByAdmin(resID int, status string) (*ds.Resolutions, error) {
+	var result ds.Resolutions
+
+	err := r.db.Where("resolution_id  = ? AND status = ?", resID, ds.FormedStatus).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result.Status = status
+	if err := r.db.Save(&result).Error; err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (r *Repository) DeleteResolution(resID int) (*ds.Resolutions, error) {
+	var result ds.Resolutions
+
+	err := r.db.Where("resolution_id  = ?", resID).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	result.Status = ds.DeletedStatus
+	if err := r.db.Save(&result).Error; err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (r *Repository) DeleteFR(id int) error {
+	err := r.db.Delete(&ds.Fine_Resolutions{}, "fin_res_id = ?", id).Error
 	if err != nil {
 		return err
 	}
