@@ -235,3 +235,38 @@ func (r *Repository) DeleteFR(id int) error {
 	}
 	return nil
 }
+
+func (r *Repository) UpdateFRCount(fid int, newNumber int) (*ds.Fine_Resolutions, error) {
+	var result ds.Fine_Resolutions
+
+	// Ищем запись с указанным ID
+	err := r.db.Where("fin_res_id = ?", fid).First(&result).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Обновляем только поле Number
+	result.Number = newNumber
+	if err = r.db.Save(&result).Error; err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *Repository) CreateUser(user *ds.Users) (*ds.Users, error) {
+	err := r.db.Create(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
+	err := r.db.Save(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}

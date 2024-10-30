@@ -52,12 +52,12 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.DELETE(ResolutionDomain+"/delete/:id", h.DeleteResolution) // Удаление постановления
 
 	// домен м-м
-	router.DELETE(FinResDomain+"/delete/:id", h.DeleteFR) // Удаление из Fin_Res
-	//router.PUT(FinResDomain+"/count/:id", h.UpdateFRCount) // Изменение поля в Fin_Res
+	router.DELETE(FinResDomain+"/delete/:id", h.DeleteFR)  // Удаление из Fin_Res
+	router.PUT(FinResDomain+"/count/:id", h.UpdateFRCount) // Изменение поля в Fin_Res
 
 	// домен пользователя
-	//router.POST(UserDomain, h.CreateUser)
-	//router.PUT(UserDomain+"/update", h.UpdateUser)
+	router.POST(UserDomain+"/create", h.CreateUser)
+	router.PUT(UserDomain+"/update/:id", h.UpdateUser)
 	//router.POST(UserDomain+"/auth", h.AuthUser)
 	//router.POST(UserDomain+"/logout", h.LogoutUser)
 }

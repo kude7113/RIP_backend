@@ -92,6 +92,7 @@ func (h *Handler) UpdateFines(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	var request *ds.Fines
 	err = ctx.BindJSON(&request)
@@ -99,6 +100,7 @@ func (h *Handler) UpdateFines(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	request.Fine_ID = id
 	updateFine, err := h.Repository.UpdateFine(request)
@@ -106,6 +108,7 @@ func (h *Handler) UpdateFines(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, updateFine)
 }
@@ -116,12 +119,14 @@ func (h *Handler) DeleteFines(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	err = h.Repository.DeleteFine(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
@@ -136,12 +141,14 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	err = h.Repository.AddFinesToResolution(userID, fineID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "added",
@@ -154,6 +161,7 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, allRes)
 }
@@ -164,12 +172,14 @@ func (h *Handler) ResolutionByID(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	result, err := h.Repository.GetResByID(id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, result)
 }
@@ -180,6 +190,7 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	var request *ds.Resolutions
 	err = ctx.BindJSON(&request)
@@ -187,6 +198,7 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	request.Resolution_ID = id
 	updateRes, err := h.Repository.UpdateRes(request)
@@ -194,6 +206,7 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 	ctx.JSON(http.StatusOK, updateRes)
 }
@@ -207,6 +220,7 @@ func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, result)
@@ -219,6 +233,7 @@ func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	result, err := h.Repository.SetStatusByAdmin(resID, newStatus)
@@ -226,6 +241,7 @@ func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, result)
@@ -237,6 +253,7 @@ func (h *Handler) DeleteResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	result, err := h.Repository.DeleteResolution(resID)
@@ -244,6 +261,7 @@ func (h *Handler) DeleteResolution(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, result)
@@ -255,6 +273,7 @@ func (h *Handler) DeleteFR(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	err = h.Repository.DeleteFR(resFID)
@@ -262,9 +281,92 @@ func (h *Handler) DeleteFR(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "Deleted",
 	})
+}
+
+func (h *Handler) UpdateFRCount(ctx *gin.Context) {
+	resFID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid ID",
+		})
+		return
+	}
+
+	var request ds.Fine_Resolutions
+	if err = ctx.BindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error":   "invalid request payload",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	result, err := h.Repository.UpdateFRCount(resFID, request.Number)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "failed to update record",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) CreateUser(ctx *gin.Context) {
+	var newUser *ds.Users
+	err := ctx.BindJSON(&newUser)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	newUser, err = h.Repository.CreateUser(newUser)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, newUser)
+}
+
+func (h *Handler) UpdateUser(ctx *gin.Context) {
+	userID, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	var request *ds.Users
+	err = ctx.BindJSON(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	request.User_ID = userID
+
+	result, err := h.Repository.UpdateUser(request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }
