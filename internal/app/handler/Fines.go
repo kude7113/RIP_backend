@@ -5,7 +5,9 @@ import (
 	"RIP/internal/app/models"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"time"
 )
 
 // вызываются функции из репы, которые идут в бд
@@ -156,31 +158,57 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 }
 
 func (h *Handler) AllResolutions(ctx *gin.Context) {
-	allRes, err := h.Repository.ResolutionsList()
+	dateFromQuery := ctx.Query("date_from")
+	dateToQuery := ctx.Query("date_to")
+	statusQuery := ctx.Query("status")
+
+	var dateFrom, dateTo *time.Time
+
+	// Если date_from присутствует, парсим дату
+	if dateFromQuery != "" {
+		parsedDateFrom, err := time.Parse("2006-01-02", dateFromQuery)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date_from format. Use YYYY-MM-DD."})
+			return
+		}
+		dateFrom = &parsedDateFrom
+	}
+
+	// Если date_to присутствует, парсим дату
+	if dateToQuery != "" {
+		parsedDateTo, err := time.Parse("2006-01-02", dateToQuery)
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date_to format. Use YYYY-MM-DD."})
+			return
+		}
+		dateTo = &parsedDateTo
+	}
+
+	// Запрашиваем список резолюций с учётом опциональных параметров
+	FilteredRes, err := h.Repository.ResolutionsList(dateFrom, dateTo, statusQuery)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})
 		return
 	}
-	ctx.JSON(http.StatusOK, allRes)
+
+	ctx.JSON(http.StatusOK, FilteredRes)
 }
 
 func (h *Handler) ResolutionByID(ctx *gin.Context) {
-	id, err := strconv.Atoi(ctx.Param("id"))
+	resID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid resID"})
+	}
+
+	result, err := h.Repository.GetResByID(resID)
+	if err != nil {
+		ctx.Redirect(http.StatusFound, "/")
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	result, err := h.Repository.GetResByID(id)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+
 	ctx.JSON(http.StatusOK, result)
 }
 
@@ -369,4 +397,41 @@ func (h *Handler) UpdateUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, result)
+}
+
+func (h *Handler) UploadImage(ctx *gin.Context) {
+	// Считываем id из параметра URL
+	id, err := strconv.Atoi(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	// Получаем файл из запроса
+	request, err := ctx.FormFile("image")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: image file is required"})
+		return
+	}
+
+	// Открываем файл
+	file, err := request.Open()
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to open image"})
+		return
+	}
+	defer file.Close()
+
+	// Генерация имени файла
+	fileExtension := filepath.Ext(request.Filename)
+	fileName := strconv.Itoa(id) + fileExtension
+
+	// Загружаем файл через репозиторий, предварительно удаляя существующий, если он есть
+	imageURL, err := h.Repository.UploadImageAndUpdateURL(id, fileName, file, request.Size)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"ImageURL": imageURL})
 }

@@ -2,10 +2,16 @@ package repository
 
 import (
 	"RIP/internal/app/ds"
+	"RIP/internal/app/models"
+	"RIP/internal/app/storage"
 	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
+	"math/rand"
+	"mime/multipart"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -147,23 +153,75 @@ func (r *Repository) AddFinesToResolution(userID, fineID int) error {
 	return nil
 }
 
-func (r *Repository) ResolutionsList() (*[]ds.Resolutions, error) {
-	var result []ds.Resolutions
+func (r *Repository) ResolutionsList(dateFrom, dateTo *time.Time, status string) (*[]models.ResForAll, error) {
+	var resolutions []models.ResForAll
 
-	err := r.db.Model(&ds.Resolutions{}).Find(&result).Error
+	// Базовый запрос: выбираем все записи из таблицы `resolutions` и присоединяем таблицу `users`.
+	query := r.db.Table("resolutions").
+		Select(`resolutions.resolution_id, resolutions.status, resolutions.date_created, resolutions.date_formed, 
+                resolutions.date_done, resolutions.car_license_plate, 
+                users_login.login as user, head_login.login as head_of_depart`).
+		Joins("LEFT JOIN users AS users_login ON users_login.user_id = resolutions.user_id").
+		Joins("LEFT JOIN users AS head_login ON head_login.user_id = resolutions.head_of_depart_id")
+
+	// Добавляем фильтрацию по `date_from`, если параметр не равен nil
+	if dateFrom != nil {
+		query = query.Where("resolutions.date_created >= ?", *dateFrom)
+	}
+
+	// Добавляем фильтрацию по `date_to`, если параметр не равен nil
+	if dateTo != nil {
+		query = query.Where("resolutions.date_created <= ?", *dateTo)
+	}
+
+	// Добавляем фильтрацию по `status`, если параметр не пуст
+	if status != "" {
+		query = query.Where("resolutions.status = ?", status)
+	}
+
+	// Выполняем запрос
+	if err := query.Find(&resolutions).Error; err != nil {
+		return nil, err
+	}
+
+	return &resolutions, nil
+}
+
+func (r *Repository) GetResByID(resID int) (*models.ResWithFines, error) {
+	var res ds.Resolutions
+
+	if err := r.db.Model(&ds.Resolutions{}).Where("resolution_id = ?", resID).First(&res).Error; err != nil {
+		r.logger.Infof("Found penis")
+		return nil, err
+	}
+	var finesWithCount []models.FineWithCount
+	var finesResolution []ds.Fine_Resolutions
+	// Получаем все записи Fine_Resolution для заданного resID
+	err := r.db.Where("resolution_id = ?", resID).Find(&finesResolution).Error
 	if err != nil {
 		return nil, err
 	}
 
-	return &result, nil
-}
+	// Цикл по всем найденным штрафам в постановлении
+	for _, fineRes := range finesResolution {
+		var fine ds.Fines
+		// Для каждого штрафа ищем его полную информацию
+		err := r.db.Where("fine_id = ?", fineRes.Fine_ID).First(&fine).Error
+		if err != nil {
+			return nil, err
+		}
 
-func (r *Repository) GetResByID(id int) (*ds.Resolutions, error) {
-	var result ds.Resolutions
+		// Создаём объект FinesWithCount и добавляем его в результат
+		fineCount := models.FineWithCount{
+			Fine:  &fine,
+			Count: fineRes.Number, // Используем поле Number из finesResolution
+		}
+		finesWithCount = append(finesWithCount, fineCount)
+	}
 
-	err := r.db.First(&result, "resolution_id = ?", id).Error
-	if err != nil {
-		return nil, err
+	result := models.ResWithFines{
+		Res:   &res,
+		Fines: &finesWithCount,
 	}
 
 	return &result, nil
@@ -207,9 +265,37 @@ func (r *Repository) SetStatusByAdmin(resID int, status string) (*ds.Resolutions
 	}
 
 	result.Status = status
+
+	var totalPrice int
+	var finesResolution []ds.Fine_Resolutions
+	// Получаем все записи Fine_Resolution для заданного resID
+	err = r.db.Where("resolution_id = ?", resID).Find(&finesResolution).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Цикл по всем найденным штрафам в постановлении
+	for _, fineRes := range finesResolution {
+		var fine ds.Fines
+		// Для каждого штрафа ищем его полную информацию
+		err := r.db.Where("fine_id = ?", fineRes.Fine_ID).First(&fine).Error
+		if err != nil {
+			return nil, err
+		}
+
+		totalPrice += fine.Price * fineRes.Number
+	}
+
+	if rand.Intn(2) == 0 {
+		// С вероятностью 50% умножаем число на 0.7
+		totalPrice *= int(float64(totalPrice) * 0.7)
+		result.Sale = true
+	}
+	result.Total_Price = totalPrice
 	if err := r.db.Save(&result).Error; err != nil {
 		return nil, err
 	}
+
 	return &result, nil
 }
 
@@ -269,4 +355,55 @@ func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (r *Repository) UploadImageAndUpdateURL(fineID int, fileName string, file multipart.File, fileSize int64) (string, error) {
+	// Инициализация Minio хранилища
+	minioStorage, err := storage.NewMinioStorage(
+		os.Getenv("MINIO_ENDPOINT_URL"),
+		os.Getenv("MINIO_ACCESS_KEY"),
+		os.Getenv("MINIO_SECRET_KEY"),
+		os.Getenv("MINIO_SECURE") == "true",
+	)
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize Minio client: %w", err)
+	}
+
+	// Получение существующей записи о штрафе
+	delivery, err := r.GetFinesByID(fineID)
+	if err != nil {
+		return "", fmt.Errorf("failed to get delivery by ID: %w", err)
+	}
+	if delivery == nil {
+		return "", fmt.Errorf("delivery not found")
+	}
+
+	// Удаление предыдущего изображения из Minio, если оно существует
+	if delivery.Imge != "" {
+		previousFileName := filepath.Base(delivery.Imge) // Получаем имя файла из URL
+		err = minioStorage.DeleteImg(os.Getenv("MINIO_BUCKET_NAME"), previousFileName)
+		if err != nil {
+			return "", fmt.Errorf("failed to delete previous image: %w", err)
+		}
+	}
+
+	// Загрузка нового файла в Minio
+	err = minioStorage.LoadImg(os.Getenv("MINIO_BUCKET_NAME"), fileName, file, fileSize)
+	if err != nil {
+		return "", fmt.Errorf("failed to load image to Minio: %w", err)
+	}
+
+	// Генерация URL нового изображения
+	imageURL := "http://" + os.Getenv("MINIO_ENDPOINT_URL") + "/" + os.Getenv("MINIO_BUCKET_NAME") + "/" + fileName
+
+	// Обновление URL изображения в базе данных
+	query := "UPDATE fines SET imge = $1 WHERE fine_id = $2"
+	result := r.db.Exec(query, imageURL, fineID)
+	if result.Error != nil {
+		return "", fmt.Errorf("failed to update image URL in database: %w", result.Error)
+	}
+
+	r.logger.Info("Rows affected:", result.RowsAffected)
+
+	return imageURL, nil
 }
