@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/go-redis/redis"
 	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -9,6 +10,7 @@ import (
 type Repository struct {
 	db     *gorm.DB
 	logger *logrus.Logger
+	rd     *redis.Client
 }
 
 func NewRepository(dsn string, l *logrus.Logger) (*Repository, error) {

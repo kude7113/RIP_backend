@@ -56,10 +56,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT(FinResDomain+"/count/:id", h.UpdateFRCount) // Изменение поля в Fin_Res
 
 	// домен пользователя
-	router.POST(UserDomain+"/create", h.CreateUser)
-	router.PUT(UserDomain+"/update/:id", h.UpdateUser)
-	//router.POST(UserDomain+"/auth", h.AuthUser)
-	//router.POST(UserDomain+"/logout", h.LogoutUser)
+	router.POST(UserDomain+"/register", h.RegistrUser)
+	//router.POST(UserDomain+"/login", h.LoginUser)
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

@@ -340,23 +340,6 @@ func (r *Repository) UpdateFRCount(fid int, newNumber int) (*ds.Fine_Resolutions
 	return &result, nil
 }
 
-func (r *Repository) CreateUser(user *ds.Users) (*ds.Users, error) {
-	err := r.db.Create(&user).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
-	err := r.db.Save(&user).Error
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
-}
-
 func (r *Repository) UploadImageAndUpdateURL(fineID int, fileName string, file multipart.File, fileSize int64) (string, error) {
 	// Инициализация Minio хранилища
 	minioStorage, err := storage.NewMinioStorage(
@@ -406,4 +389,28 @@ func (r *Repository) UploadImageAndUpdateURL(fineID int, fileName string, file m
 	r.logger.Info("Rows affected:", result.RowsAffected)
 
 	return imageURL, nil
+}
+
+func (r *Repository) CreateUser(name, password string) (*ds.Users, error) {
+
+	user := &ds.Users{
+		Login:    name,
+		Password: password,
+	}
+	// логин не может повторяться
+	if err := r.db.Where("login = ?", name).First(&user).Error; err == nil {
+		return nil, fmt.Errorf("user with login %s already exists", name)
+	}
+	if err := r.db.Create(user).Error; err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
+	err := r.db.Save(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

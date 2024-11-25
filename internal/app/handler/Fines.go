@@ -347,27 +347,6 @@ func (h *Handler) UpdateFRCount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
-func (h *Handler) CreateUser(ctx *gin.Context) {
-	var newUser *ds.Users
-	err := ctx.BindJSON(&newUser)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	newUser, err = h.Repository.CreateUser(newUser)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, newUser)
-}
-
 func (h *Handler) UpdateUser(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -434,4 +413,29 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{"ImageURL": imageURL})
+}
+
+func (h *Handler) RegistrUser(ctx *gin.Context) {
+	var newUser ds.Users
+	err := ctx.ShouldBindJSON(&newUser)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	user, err := h.Repository.CreateUser(newUser.Login, newUser.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, user)
+}
+
+func (h *Handler) LoginUser(ctx *gin.Context) {
+
 }
