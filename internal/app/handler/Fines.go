@@ -160,7 +160,7 @@ func (h *Handler) DeleteFines(ctx *gin.Context) {
 }
 
 func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
-	userID := 1
+	userID, _ := ctx.Get("user_id")
 	fineID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -168,7 +168,7 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 		})
 		return
 	}
-	err = h.Repository.AddFinesToResolution(userID, fineID)
+	err = h.Repository.AddFinesToResolution(int(userID.(float64)), fineID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
@@ -263,9 +263,9 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 }
 
 func (h *Handler) SetStatusByUser(ctx *gin.Context) {
-	userID := 1
+	userID, _ := ctx.Get("user_id")
 
-	result, err := h.Repository.SetStatusByUser(userID)
+	result, err := h.Repository.SetStatusByUser(int(userID.(float64)))
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
