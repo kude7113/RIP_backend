@@ -414,3 +414,30 @@ func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
 	}
 	return user, nil
 }
+
+func (r *Repository) LoginUser(login, password string) (string, error) {
+	var user ds.Users
+	// сперва проверим по логину
+	if err := r.db.Where("login = ?", login).First(&user).Error; err != nil {
+		return "", errors.New("user does not exist")
+
+	}
+	if user.Password != password {
+		return "", errors.New("incorrect password")
+	}
+
+	token, err := GenerateJWTToken(user.User_ID, user.IsAdmin)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func (r *Repository) LogoutUser(userID int, token string) error {
+	err := r.SaveJWTToken(userID, token)
+	if err != nil {
+		return err
+	}
+	return nil
+}

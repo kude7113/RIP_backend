@@ -16,12 +16,34 @@ import (
 func (h *Handler) AllFines(ctx *gin.Context) {
 	searchFines := ctx.Query("searchFines")
 
-	userId := 1
+	userId, _ := ctx.Get("user_id")
 
-	resCount, err := h.Repository.GetResolutionLength(userId)
-	resID, err := h.Repository.ResolutionByUserID(userId)
+	// Объявляем переменные resCount и resID
+	var resCount, resID int
 
+	// Если userId не равен 0, выполняем запросы на получение данных
+	if userId.(float64) != 0 {
+		var err error
+		resCount, err = h.Repository.GetResolutionLength(int(userId.(float64)))
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		resID, err = h.Repository.ResolutionByUserID(int(userId.(float64)))
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+	}
+
+	// Запрос на получение штрафов
 	var fines *[]ds.Fines
+	var err error
 	if searchFines == "" {
 		fines, err = h.Repository.GetAllFines()
 		if err != nil {
@@ -40,6 +62,7 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 		}
 	}
 
+	// Формируем ответ
 	answer := models.FinesListWithRes{
 		Fines:    fines,
 		ResCount: resCount,
@@ -415,7 +438,7 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"ImageURL": imageURL})
 }
 
-func (h *Handler) RegistrUser(ctx *gin.Context) {
+func (h *Handler) RegisterUser(ctx *gin.Context) {
 	var newUser ds.Users
 	err := ctx.ShouldBindJSON(&newUser)
 	if err != nil {
@@ -437,5 +460,39 @@ func (h *Handler) RegistrUser(ctx *gin.Context) {
 }
 
 func (h *Handler) LoginUser(ctx *gin.Context) {
+	var request ds.Users
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
+	token, err := h.Repository.LoginUser(request.Login, request.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, token)
+}
+
+func (h *Handler) LogoutUser(ctx *gin.Context) {
+	value, exists := ctx.Get("user_id")
+	if !exists {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "No user id found"})
+		return
+	}
+
+	tokenString := extractTokenFromHeader(ctx.Request)
+	if tokenString == "" {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+	}
+
+	err := h.Repository.LogoutUser(int(value.(float64)), tokenString)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{
+		"logout": "success",
+	})
 }

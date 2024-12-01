@@ -4,6 +4,7 @@ import (
 	"RIP/internal/app/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
 type Handler struct {
@@ -35,13 +36,13 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	*/
 
 	// домен услуги /Fines
-	router.GET(FineDomain, h.AllFines)                         // Список штрафов
-	router.GET(FineDomain+"/:id", h.FinesByID)                 // Штраф по ID
-	router.POST(FineDomain+"/create", h.CreateFines)           // Добавление штрафа
-	router.POST(FineDomain+"/img/:id", h.UploadImage)          // Добавление или замена изображения
-	router.PUT(FineDomain+"/update/:id", h.UpdateFines)        // Редактирование штрафа
-	router.DELETE(FineDomain+"/delete/:id", h.DeleteFines)     // Удаление штрафа
-	router.POST(FineDomain+"/add/:id", h.AddFinesToResolution) // Добавление штрафа в последнее постановление
+	router.GET(FineDomain, h.RoleMiddleware(AdminRole, UserRole, GuestRole), h.AllFines) // Список штрафов
+	router.GET(FineDomain+"/:id", h.FinesByID)                                           // Штраф по ID
+	router.POST(FineDomain+"/create", h.CreateFines)                                     // Добавление штрафа
+	router.POST(FineDomain+"/img/:id", h.UploadImage)                                    // Добавление или замена изображения
+	router.PUT(FineDomain+"/update/:id", h.UpdateFines)                                  // Редактирование штрафа
+	router.DELETE(FineDomain+"/delete/:id", h.DeleteFines)                               // Удаление штрафа
+	router.POST(FineDomain+"/add/:id", h.AddFinesToResolution)                           // Добавление штрафа в последнее постановление
 
 	// домен заявки /Resolutions
 	router.GET(ResolutionDomain, h.AllResolutions)                    // Список постановлений
@@ -56,8 +57,19 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT(FinResDomain+"/count/:id", h.UpdateFRCount) // Изменение поля в Fin_Res
 
 	// домен пользователя
-	router.POST(UserDomain+"/register", h.RegistrUser)
-	//router.POST(UserDomain+"/login", h.LoginUser)
+	router.POST(UserDomain+"/register", h.RegisterUser)
+	router.POST(UserDomain+"/login", h.LoginUser)
+	router.POST(UserDomain+"/logout", h.RoleMiddleware(AdminRole, UserRole), h.LogoutUser)
+	router.PUT(UserDomain+"/update", h.UpdateUser)
+
+	router.GET(UserDomain+"/protected", h.RoleMiddleware(AdminRole), func(ctx *gin.Context) {
+		userID := ctx.MustGet("user_id").(float64)
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"message": "user is authorized",
+			"user_id": userID,
+		})
+	})
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {

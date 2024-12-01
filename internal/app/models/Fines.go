@@ -7,7 +7,7 @@ import (
 )
 
 type FinesListWithRes struct {
-	Fines    *[]ds.Fines `json:"id"`
+	Fines    *[]ds.Fines `json:"fines"`
 	ResCount int         `json:"resCount"`
 	ResID    int         `json:"resId"`
 }
