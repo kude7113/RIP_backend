@@ -1,0 +1,698 @@
+basePath: /
+definitions:
+  ds.Fine_Resolutions:
+    properties:
+      fin_Res_ID:
+        type: integer
+      fine_ID:
+        type: integer
+      number:
+        type: integer
+      resolution_ID:
+        type: integer
+    type: object
+  ds.Fines:
+    properties:
+      dopInf:
+        type: string
+      fineID:
+        type: integer
+      fullInf:
+        type: string
+      imge:
+        type: string
+      price:
+        type: integer
+      title:
+        type: string
+    type: object
+  ds.Resolutions:
+    properties:
+      car_License_Plate:
+        type: string
+      date_Created:
+        type: string
+      date_Done:
+        type: string
+      date_Formed:
+        type: string
+      head_Of_Depart_ID:
+        type: integer
+      resolution_ID:
+        type: integer
+      sale:
+        type: boolean
+      status:
+        type: string
+      total_Price:
+        type: integer
+      user_ID:
+        type: integer
+    type: object
+  ds.Users:
+    properties:
+      id:
+        type: integer
+      is_admin:
+        type: boolean
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  models.FinesListWithRes:
+    properties:
+      fines:
+        items:
+          $ref: '#/definitions/ds.Fines'
+        type: array
+      resCount:
+        type: integer
+      resId:
+        type: integer
+    type: object
+host: 127.0.0.1
+info:
+  contact: {}
+  description: Delivery service
+  title: DeliVeryWell
+  version: "1.0"
+paths:
+  /fines:
+    get:
+      description: Get list of all fines or search fines by keyword
+      parameters:
+      - description: Search fines
+        in: query
+        name: searchFines
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.FinesListWithRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all fines
+      tags:
+      - Fines
+    post:
+      consumes:
+      - application/json
+      description: Create a new fine
+      parameters:
+      - description: Fine data
+        in: body
+        name: fine
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Fines'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ds.Fines'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new fine
+      tags:
+      - Fines
+  /fines-resolutions/{id}:
+    delete:
+      description: Delete fine-resolution link by its ID
+      parameters:
+      - description: Fine-Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete fine-resolution link by ID
+      tags:
+      - Fines-Resolutions
+  /fines-resolutions/{id}/count:
+    put:
+      consumes:
+      - application/json
+      description: Update the count of a fine-resolution link
+      parameters:
+      - description: Fine-Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fine-Resolution data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Fine_Resolutions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Fine_Resolutions'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update fine-resolution count
+      tags:
+      - Fines-Resolutions
+  /fines/{id}:
+    delete:
+      description: Delete fine by its ID
+      parameters:
+      - description: Fine ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Deleted
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a fine by ID
+      tags:
+      - Fines
+    get:
+      description: Get a fine by its ID
+      parameters:
+      - description: Fine ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Fines'
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get fine by ID
+      tags:
+      - Fines
+    put:
+      consumes:
+      - application/json
+      description: Update fine details by its ID
+      parameters:
+      - description: Fine ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fine data
+        in: body
+        name: fine
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Fines'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Fines'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a fine by ID
+      tags:
+      - Fines
+  /fines/{id}/resolution:
+    post:
+      description: Add fine to a user's resolution
+      parameters:
+      - description: Fine ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: added
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Add a fine to a resolution
+      tags:
+      - Fines
+  /images/{id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image for a specific ID
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ImageURL
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload an image by ID
+      tags:
+      - Images
+  /resolutions:
+    get:
+      description: Get list of all resolutions with optional filters for date range
+        and status
+      parameters:
+      - description: Filter by start date (YYYY-MM-DD)
+        in: query
+        name: date_from
+        type: string
+      - description: Filter by end date (YYYY-MM-DD)
+        in: query
+        name: date_to
+        type: string
+      - description: Filter by resolution status
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ds.Resolutions'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all resolutions
+      tags:
+      - Resolutions
+  /resolutions/{id}:
+    delete:
+      description: Delete resolution by its ID
+      parameters:
+      - description: Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Resolutions'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a resolution by ID
+      tags:
+      - Resolutions
+    get:
+      description: Get a resolution by its ID
+      parameters:
+      - description: Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Resolutions'
+        "400":
+          description: Invalid ID
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get resolution by ID
+      tags:
+      - Resolutions
+    put:
+      consumes:
+      - application/json
+      description: Update resolution details by its ID
+      parameters:
+      - description: Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Resolution data
+        in: body
+        name: resolution
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Resolutions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Resolutions'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update a resolution by ID
+      tags:
+      - Resolutions
+  /resolutions/{id}/status:
+    put:
+      description: Set status of a resolution by admin
+      parameters:
+      - description: Resolution ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Resolutions'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Set status of resolution by admin
+      tags:
+      - Resolutions
+  /resolutions/user/status:
+    put:
+      description: Set status of a resolution for a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Resolutions'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Set status of resolution by user
+      tags:
+      - Resolutions
+  /users/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update user details by its ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Users'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ds.Users'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update user by ID
+      tags:
+      - Users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user and generate a token
+      parameters:
+      - description: User credentials
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Users'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: token
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login a user
+      tags:
+      - Users
+  /users/logout:
+    post:
+      description: Logout a user by invalidating the token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'logout: success'
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout a user
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user by providing login and password
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/ds.Users'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ds.Users'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Users
+schemes:
+- http
+swagger: "2.0"

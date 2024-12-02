@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"RIP/docs"
 	"RIP/internal/app/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"net/http"
 )
 
@@ -27,13 +30,14 @@ const (
 )
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	/*
-		router.GET("/", h.AllFines)
-		router.GET("/more/:id", h.FinesByID)
-		router.POST("/delete/:id", h.DeleteResolution)
-		router.POST("/add/:id", h.AddFinesToRes)
-		router.GET("/resolution/:id", h.GetResolution)
-	*/
+
+	docs.SwaggerInfo.Title = "Fines for scooter"
+	docs.SwaggerInfo.Description = "API server"
+	docs.SwaggerInfo.Version = "1.0"
+	docs.SwaggerInfo.BasePath = "/"
+	docs.SwaggerInfo.Host = "localhost:8000"
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// домен услуги /Fines
 	router.GET(FineDomain, h.RoleMiddleware(AdminRole, UserRole, GuestRole), h.AllFines)         // Список штрафов

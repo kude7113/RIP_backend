@@ -10,18 +10,22 @@ import (
 	"time"
 )
 
-// вызываются функции из репы, которые идут в бд
-// то есть как бы прослойка между эндпоинтами и данными, которые идут их бд
-
+// AllFines godoc
+// @Summary Get all fines
+// @Description Get list of all fines or search fines by keyword
+// @Tags Fines
+// @Produce json
+// @Param searchFines query string false "Search fines"
+// @Success 200 {object} models.FinesListWithRes
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines [get]
 func (h *Handler) AllFines(ctx *gin.Context) {
 	searchFines := ctx.Query("searchFines")
 
 	userId, _ := ctx.Get("user_id")
 
-	// Объявляем переменные resCount и resID
 	var resCount, resID int
 
-	// Если userId не равен 0, выполняем запросы на получение данных
 	if userId.(float64) != 0 {
 		var err error
 		resCount, err = h.Repository.GetResolutionLength(int(userId.(float64)))
@@ -41,7 +45,6 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 		}
 	}
 
-	// Запрос на получение штрафов
 	var fines *[]ds.Fines
 	var err error
 	if searchFines == "" {
@@ -62,7 +65,6 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 		}
 	}
 
-	// Формируем ответ
 	answer := models.FinesListWithRes{
 		Fines:    fines,
 		ResCount: resCount,
@@ -71,6 +73,16 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, answer)
 }
 
+// FinesByID godoc
+// @Summary Get fine by ID
+// @Description Get a fine by its ID
+// @Tags Fines
+// @Produce json
+// @Param id path int true "Fine ID"
+// @Success 200 {object} ds.Fines
+// @Failure 400 {string} string "Invalid ID"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines/{id} [get]
 func (h *Handler) FinesByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 
@@ -91,6 +103,17 @@ func (h *Handler) FinesByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, fine)
 }
 
+// CreateFines godoc
+// @Summary Create a new fine
+// @Description Create a new fine
+// @Tags Fines
+// @Accept json
+// @Produce json
+// @Param fine body ds.Fines true "Fine data"
+// @Success 201 {object} ds.Fines
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines [post]
 func (h *Handler) CreateFines(ctx *gin.Context) {
 	var request *ds.Fines
 	err := ctx.BindJSON(&request)
@@ -111,6 +134,18 @@ func (h *Handler) CreateFines(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, newFine)
 }
 
+// UpdateFines godoc
+// @Summary Update a fine by ID
+// @Description Update fine details by its ID
+// @Tags Fines
+// @Accept json
+// @Produce json
+// @Param id path int true "Fine ID"
+// @Param fine body ds.Fines true "Fine data"
+// @Success 200 {object} ds.Fines
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines/{id} [put]
 func (h *Handler) UpdateFines(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -138,6 +173,16 @@ func (h *Handler) UpdateFines(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, updateFine)
 }
 
+// DeleteFines godoc
+// @Summary Delete a fine by ID
+// @Description Delete fine by its ID
+// @Tags Fines
+// @Produce json
+// @Param id path int true "Fine ID"
+// @Success 200 {string} string "Deleted"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines/{id} [delete]
 func (h *Handler) DeleteFines(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -159,6 +204,16 @@ func (h *Handler) DeleteFines(ctx *gin.Context) {
 	})
 }
 
+// AddFinesToResolution godoc
+// @Summary Add a fine to a resolution
+// @Description Add fine to a user's resolution
+// @Tags Fines
+// @Produce json
+// @Param id path int true "Fine ID"
+// @Success 200 {string} string "added"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines/{id}/resolution [post]
 func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 	userID, _ := ctx.Get("user_id")
 	fineID, err := strconv.Atoi(ctx.Param("id"))
@@ -180,6 +235,18 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 	})
 }
 
+// AllResolutions godoc
+// @Summary Get all resolutions
+// @Description Get list of all resolutions with optional filters for date range and status
+// @Tags Resolutions
+// @Produce json
+// @Param date_from query string false "Filter by start date (YYYY-MM-DD)"
+// @Param date_to query string false "Filter by end date (YYYY-MM-DD)"
+// @Param status query string false "Filter by resolution status"
+// @Success 200 {object} []ds.Resolutions
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions [get]
 func (h *Handler) AllResolutions(ctx *gin.Context) {
 	dateFromQuery := ctx.Query("date_from")
 	dateToQuery := ctx.Query("date_to")
@@ -187,7 +254,6 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 
 	var dateFrom, dateTo *time.Time
 
-	// Если date_from присутствует, парсим дату
 	if dateFromQuery != "" {
 		parsedDateFrom, err := time.Parse("2006-01-02", dateFromQuery)
 		if err != nil {
@@ -197,7 +263,6 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 		dateFrom = &parsedDateFrom
 	}
 
-	// Если date_to присутствует, парсим дату
 	if dateToQuery != "" {
 		parsedDateTo, err := time.Parse("2006-01-02", dateToQuery)
 		if err != nil {
@@ -207,7 +272,6 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 		dateTo = &parsedDateTo
 	}
 
-	// Запрашиваем список резолюций с учётом опциональных параметров
 	FilteredRes, err := h.Repository.ResolutionsList(dateFrom, dateTo, statusQuery)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -219,6 +283,16 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, FilteredRes)
 }
 
+// ResolutionByID godoc
+// @Summary Get resolution by ID
+// @Description Get a resolution by its ID
+// @Tags Resolutions
+// @Produce json
+// @Param id path int true "Resolution ID"
+// @Success 200 {object} ds.Resolutions
+// @Failure 400 {string} string "Invalid ID"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions/{id} [get]
 func (h *Handler) ResolutionByID(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -235,6 +309,18 @@ func (h *Handler) ResolutionByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// UpdateResolution godoc
+// @Summary Update a resolution by ID
+// @Description Update resolution details by its ID
+// @Tags Resolutions
+// @Accept json
+// @Produce json
+// @Param id path int true "Resolution ID"
+// @Param resolution body ds.Resolutions true "Resolution data"
+// @Success 200 {object} ds.Resolutions
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions/{id} [put]
 func (h *Handler) UpdateResolution(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -262,6 +348,14 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, updateRes)
 }
 
+// SetStatusByUser godoc
+// @Summary Set status of resolution by user
+// @Description Set status of a resolution for a user
+// @Tags Resolutions
+// @Produce json
+// @Success 200 {object} ds.Resolutions
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions/user/status [put]
 func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 	userID, _ := ctx.Get("user_id")
 
@@ -277,6 +371,16 @@ func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// SetStatusByAdmin godoc
+// @Summary Set status of resolution by admin
+// @Description Set status of a resolution by admin
+// @Tags Resolutions
+// @Produce json
+// @Param id path int true "Resolution ID"
+// @Success 200 {object} ds.Resolutions
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions/{id}/status [put]
 func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	newStatus := ds.ApprovedStatus
@@ -298,6 +402,16 @@ func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// DeleteResolution godoc
+// @Summary Delete a resolution by ID
+// @Description Delete resolution by its ID
+// @Tags Resolutions
+// @Produce json
+// @Param id path int true "Resolution ID"
+// @Success 200 {object} ds.Resolutions
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /resolutions/{id} [delete]
 func (h *Handler) DeleteResolution(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -318,6 +432,16 @@ func (h *Handler) DeleteResolution(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// DeleteFR godoc
+// @Summary Delete fine-resolution link by ID
+// @Description Delete fine-resolution link by its ID
+// @Tags Fines-Resolutions
+// @Produce json
+// @Param id path int true "Fine-Resolution ID"
+// @Success 200 {string} string "Deleted"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines-resolutions/{id} [delete]
 func (h *Handler) DeleteFR(ctx *gin.Context) {
 	resFID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -340,6 +464,18 @@ func (h *Handler) DeleteFR(ctx *gin.Context) {
 	})
 }
 
+// UpdateFRCount godoc
+// @Summary Update fine-resolution count
+// @Description Update the count of a fine-resolution link
+// @Tags Fines-Resolutions
+// @Accept json
+// @Produce json
+// @Param id path int true "Fine-Resolution ID"
+// @Param request body ds.Fine_Resolutions true "Fine-Resolution data"
+// @Success 200 {object} ds.Fine_Resolutions
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /fines-resolutions/{id}/count [put]
 func (h *Handler) UpdateFRCount(ctx *gin.Context) {
 	resFID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -370,6 +506,18 @@ func (h *Handler) UpdateFRCount(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// UpdateUser godoc
+// @Summary Update user by ID
+// @Description Update user details by its ID
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param id path int true "User ID"
+// @Param user body ds.Users true "User data"
+// @Success 200 {object} ds.Users
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users/{id} [put]
 func (h *Handler) UpdateUser(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -401,22 +549,31 @@ func (h *Handler) UpdateUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, result)
 }
 
+// UploadImage godoc
+// @Summary Upload an image by ID
+// @Description Upload an image for a specific ID
+// @Tags Images
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "ID"
+// @Param image formData file true "Image file"
+// @Success 200 {object} map[string]string "ImageURL"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /images/{id} [post]
 func (h *Handler) UploadImage(ctx *gin.Context) {
-	// Считываем id из параметра URL
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
 		return
 	}
 
-	// Получаем файл из запроса
 	request, err := ctx.FormFile("image")
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request: image file is required"})
 		return
 	}
 
-	// Открываем файл
 	file, err := request.Open()
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to open image"})
@@ -424,11 +581,9 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 	}
 	defer file.Close()
 
-	// Генерация имени файла
 	fileExtension := filepath.Ext(request.Filename)
 	fileName := strconv.Itoa(id) + fileExtension
 
-	// Загружаем файл через репозиторий, предварительно удаляя существующий, если он есть
 	imageURL, err := h.Repository.UploadImageAndUpdateURL(id, fileName, file, request.Size)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -438,6 +593,17 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"ImageURL": imageURL})
 }
 
+// RegisterUser godoc
+// @Summary Register a new user
+// @Description Register a new user by providing login and password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body ds.Users true "User data"
+// @Success 201 {object} ds.Users
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users/register [post]
 func (h *Handler) RegisterUser(ctx *gin.Context) {
 	var newUser ds.Users
 	err := ctx.ShouldBindJSON(&newUser)
@@ -459,6 +625,17 @@ func (h *Handler) RegisterUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, user)
 }
 
+// LoginUser godoc
+// @Summary Login a user
+// @Description Login a user and generate a token
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body ds.Users true "User credentials"
+// @Success 200 {string} string "token"
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users/login [post]
 func (h *Handler) LoginUser(ctx *gin.Context) {
 	var request ds.Users
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -475,6 +652,15 @@ func (h *Handler) LoginUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, token)
 }
 
+// LogoutUser godoc
+// @Summary Logout a user
+// @Description Logout a user by invalidating the token
+// @Tags Users
+// @Produce json
+// @Success 200 {string} string "logout: success"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users/logout [post]
 func (h *Handler) LogoutUser(ctx *gin.Context) {
 	value, exists := ctx.Get("user_id")
 	if !exists {
