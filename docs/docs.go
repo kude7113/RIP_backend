@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/fines": {
+        "/fine": {
             "get": {
                 "description": "Get list of all fines or search fines by keyword",
                 "produces": [
@@ -50,7 +50,56 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/fine/add/{id}": {
+            "post": {
+                "description": "Add fine to a user's resolution",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines"
+                ],
+                "summary": "Add a fine to a resolution",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "added",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fine/create/{id}": {
             "post": {
                 "description": "Create a new fine",
                 "consumes": [
@@ -102,306 +151,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/fines-resolutions/{id}": {
-            "delete": {
-                "description": "Delete fine-resolution link by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines-Resolutions"
-                ],
-                "summary": "Delete fine-resolution link by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine-Resolution ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Deleted",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/fines-resolutions/{id}/count": {
-            "put": {
-                "description": "Update the count of a fine-resolution link",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines-Resolutions"
-                ],
-                "summary": "Update fine-resolution count",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine-Resolution ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Fine-Resolution data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/ds.Fine_Resolutions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ds.Fine_Resolutions"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/fines/{id}": {
-            "get": {
-                "description": "Get a fine by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines"
-                ],
-                "summary": "Get fine by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ds.Fines"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update fine details by its ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines"
-                ],
-                "summary": "Update a fine by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Fine data",
-                        "name": "fine",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/ds.Fines"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ds.Fines"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete fine by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines"
-                ],
-                "summary": "Delete a fine by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Deleted",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/fines/{id}/resolution": {
-            "post": {
-                "description": "Add fine to a user's resolution",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Fines"
-                ],
-                "summary": "Add a fine to a resolution",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Fine ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "added",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/images/{id}": {
+        "/fine/img/{id}": {
             "post": {
                 "description": "Upload an image for a specific ID",
                 "consumes": [
@@ -461,7 +211,263 @@ const docTemplate = `{
                 }
             }
         },
-        "/resolutions": {
+        "/fine/update/{id}": {
+            "put": {
+                "description": "Update fine details by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines"
+                ],
+                "summary": "Update a fine by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fine data",
+                        "name": "fine",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ds.Fines"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Fines"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fine/{id}": {
+            "get": {
+                "description": "Get a fine by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines"
+                ],
+                "summary": "Get fine by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Fines"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fines/delete/{id}": {
+            "delete": {
+                "description": "Delete fine by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines"
+                ],
+                "summary": "Delete a fine by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fr/count/{id}": {
+            "put": {
+                "description": "Update the count of a fine-resolution link",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines-Resolutions"
+                ],
+                "summary": "Update fine-resolution count",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine-Resolution ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Fine-Resolution data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ds.Fine_Resolutions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Fine_Resolutions"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/fr/delete/{id}": {
+            "delete": {
+                "description": "Delete fine-resolution link by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Fines-Resolutions"
+                ],
+                "summary": "Delete fine-resolution link by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Fine-Resolution ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/resolution": {
             "get": {
                 "description": "Get list of all resolutions with optional filters for date range and status",
                 "produces": [
@@ -522,7 +528,101 @@ const docTemplate = `{
                 }
             }
         },
-        "/resolutions/user/status": {
+        "/resolution/complete/": {
+            "put": {
+                "description": "Set status of a resolution by admin",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resolutions"
+                ],
+                "summary": "Set status of resolution by admin",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Resolution ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Resolutions"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/resolution/delete/{id}": {
+            "delete": {
+                "description": "Delete resolution by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resolutions"
+                ],
+                "summary": "Delete a resolution by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Resolution ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Resolutions"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/resolution/form": {
             "put": {
                 "description": "Set status of a resolution for a user",
                 "produces": [
@@ -551,7 +651,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/resolutions/{id}": {
+        "/resolution/{id}": {
             "get": {
                 "description": "Get a resolution by its ID",
                 "produces": [
@@ -593,7 +693,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
+            }
+        },
+        "/resolutions/update/{id}": {
             "put": {
                 "description": "Update resolution details by its ID",
                 "consumes": [
@@ -650,101 +752,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "delete": {
-                "description": "Delete resolution by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resolutions"
-                ],
-                "summary": "Delete a resolution by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resolution ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ds.Resolutions"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
             }
         },
-        "/resolutions/{id}/status": {
-            "put": {
-                "description": "Set status of a resolution by admin",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resolutions"
-                ],
-                "summary": "Set status of resolution by admin",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resolution ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ds.Resolutions"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/users/login": {
+        "/user/login": {
             "post": {
                 "description": "Login a user and generate a token",
                 "consumes": [
@@ -796,7 +806,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/logout": {
+        "/user/logout": {
             "post": {
                 "description": "Logout a user by invalidating the token",
                 "produces": [
@@ -834,7 +844,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/register": {
+        "/user/register": {
             "post": {
                 "description": "Register a new user by providing login and password",
                 "consumes": [
@@ -886,7 +896,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}": {
+        "/users/update": {
             "put": {
                 "description": "Update user details by its ID",
                 "consumes": [

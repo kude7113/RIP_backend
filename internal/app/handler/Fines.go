@@ -18,7 +18,7 @@ import (
 // @Param searchFines query string false "Search fines"
 // @Success 200 {object} models.FinesListWithRes
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines [get]
+// @Router /fine [get]
 func (h *Handler) AllFines(ctx *gin.Context) {
 	searchFines := ctx.Query("searchFines")
 
@@ -82,7 +82,7 @@ func (h *Handler) AllFines(ctx *gin.Context) {
 // @Success 200 {object} ds.Fines
 // @Failure 400 {string} string "Invalid ID"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines/{id} [get]
+// @Router /fine/{id} [get]
 func (h *Handler) FinesByID(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 
@@ -113,7 +113,7 @@ func (h *Handler) FinesByID(ctx *gin.Context) {
 // @Success 201 {object} ds.Fines
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines [post]
+// @Router /fine/create/{id} [post]
 func (h *Handler) CreateFines(ctx *gin.Context) {
 	var request *ds.Fines
 	err := ctx.BindJSON(&request)
@@ -145,7 +145,7 @@ func (h *Handler) CreateFines(ctx *gin.Context) {
 // @Success 200 {object} ds.Fines
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines/{id} [put]
+// @Router /fine/update/{id} [put]
 func (h *Handler) UpdateFines(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -182,7 +182,7 @@ func (h *Handler) UpdateFines(ctx *gin.Context) {
 // @Success 200 {string} string "Deleted"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines/{id} [delete]
+// @Router /fines/delete/{id} [delete]
 func (h *Handler) DeleteFines(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -213,7 +213,7 @@ func (h *Handler) DeleteFines(ctx *gin.Context) {
 // @Success 200 {string} string "added"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines/{id}/resolution [post]
+// @Router /fine/add/{id} [post]
 func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 	userID, _ := ctx.Get("user_id")
 	fineID, err := strconv.Atoi(ctx.Param("id"))
@@ -246,7 +246,7 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 // @Success 200 {object} []ds.Resolutions
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions [get]
+// @Router /resolution [get]
 func (h *Handler) AllResolutions(ctx *gin.Context) {
 	dateFromQuery := ctx.Query("date_from")
 	dateToQuery := ctx.Query("date_to")
@@ -292,7 +292,7 @@ func (h *Handler) AllResolutions(ctx *gin.Context) {
 // @Success 200 {object} ds.Resolutions
 // @Failure 400 {string} string "Invalid ID"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions/{id} [get]
+// @Router /resolution/{id} [get]
 func (h *Handler) ResolutionByID(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -320,7 +320,7 @@ func (h *Handler) ResolutionByID(ctx *gin.Context) {
 // @Success 200 {object} ds.Resolutions
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions/{id} [put]
+// @Router /resolutions/update/{id} [put]
 func (h *Handler) UpdateResolution(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -355,7 +355,7 @@ func (h *Handler) UpdateResolution(ctx *gin.Context) {
 // @Produce json
 // @Success 200 {object} ds.Resolutions
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions/user/status [put]
+// @Router /resolution/form [put]
 func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 	userID, _ := ctx.Get("user_id")
 
@@ -380,7 +380,7 @@ func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 // @Success 200 {object} ds.Resolutions
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions/{id}/status [put]
+// @Router /resolution/complete/ [put]
 func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	newStatus := ds.ApprovedStatus
@@ -411,7 +411,7 @@ func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 // @Success 200 {object} ds.Resolutions
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /resolutions/{id} [delete]
+// @Router /resolution/delete/{id} [delete]
 func (h *Handler) DeleteResolution(ctx *gin.Context) {
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -441,7 +441,7 @@ func (h *Handler) DeleteResolution(ctx *gin.Context) {
 // @Success 200 {string} string "Deleted"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines-resolutions/{id} [delete]
+// @Router /fr/delete/{id} [delete]
 func (h *Handler) DeleteFR(ctx *gin.Context) {
 	resFID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -475,7 +475,7 @@ func (h *Handler) DeleteFR(ctx *gin.Context) {
 // @Success 200 {object} ds.Fine_Resolutions
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fines-resolutions/{id}/count [put]
+// @Router /fr/count/{id} [put]
 func (h *Handler) UpdateFRCount(ctx *gin.Context) {
 	resFID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -517,7 +517,7 @@ func (h *Handler) UpdateFRCount(ctx *gin.Context) {
 // @Success 200 {object} ds.Users
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /users/{id} [put]
+// @Router /users/update [put]
 func (h *Handler) UpdateUser(ctx *gin.Context) {
 	userID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -560,7 +560,7 @@ func (h *Handler) UpdateUser(ctx *gin.Context) {
 // @Success 200 {object} map[string]string "ImageURL"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /images/{id} [post]
+// @Router /fine/img/{id} [post]
 func (h *Handler) UploadImage(ctx *gin.Context) {
 	id, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -603,7 +603,7 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 // @Success 201 {object} ds.Users
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /users/register [post]
+// @Router /user/register [post]
 func (h *Handler) RegisterUser(ctx *gin.Context) {
 	var newUser ds.Users
 	err := ctx.ShouldBindJSON(&newUser)
@@ -635,7 +635,7 @@ func (h *Handler) RegisterUser(ctx *gin.Context) {
 // @Success 200 {string} string "token"
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /users/login [post]
+// @Router /user/login [post]
 func (h *Handler) LoginUser(ctx *gin.Context) {
 	var request ds.Users
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -660,7 +660,7 @@ func (h *Handler) LoginUser(ctx *gin.Context) {
 // @Success 200 {string} string "logout: success"
 // @Failure 401 {object} map[string]string "Unauthorized"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /users/logout [post]
+// @Router /user/logout [post]
 func (h *Handler) LogoutUser(ctx *gin.Context) {
 	value, exists := ctx.Get("user_id")
 	if !exists {
