@@ -218,20 +218,21 @@ func (h *Handler) AddFinesToResolution(ctx *gin.Context) {
 	userID, _ := ctx.Get("user_id")
 	fineID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = h.Repository.AddFinesToResolution(int(userID.(float64)), fineID)
+
+	// Вызываем репозиторий, который теперь возвращает `resId`
+	resId, err := h.Repository.AddFinesToResolution(int(userID.(float64)), fineID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// ✅ Теперь возвращаем `resId` клиенту
 	ctx.JSON(http.StatusOK, gin.H{
 		"message": "added",
+		"resId":   resId,
 	})
 }
 
@@ -643,13 +644,17 @@ func (h *Handler) LoginUser(ctx *gin.Context) {
 		return
 	}
 
-	token, err := h.Repository.LoginUser(request.Login, request.Password)
+	token, isAdmin, err := h.Repository.LoginUser(request.Login, request.Password)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, token)
+	ctx.JSON(http.StatusOK, gin.H{
+		"token":   token,
+		"login":   request.Login,
+		"isAdmin": isAdmin,
+	})
 }
 
 // LogoutUser godoc

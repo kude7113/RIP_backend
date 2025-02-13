@@ -13,8 +13,9 @@ type FinesListWithRes struct {
 }
 
 type FineWithCount struct {
-	Fine  *ds.Fines `json:"fines"`
-	Count int       `json:"count"`
+	Fine       *ds.Fines `json:"fines"`
+	Count      int       `json:"count"`
+	Fin_res_ID int       `json:"fin_res_id"`
 }
 
 type ResForAll struct {

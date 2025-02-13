@@ -46,13 +46,18 @@ func (r *Repository) GetResolutionLength(userId int) (int, error) {
 	var req ds.Resolutions
 	status := ds.DraftStatus
 
-	if err := r.db.Where("User_id = ? AND Status = ?", userId, status).First(&req).Error; err != nil {
+	err := r.db.Where("User_id = ? AND Status = ?", userId, status).First(&req).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Если запись не найдена, возвращаем 0 без ошибки
+			return 0, nil
+		}
 		return 0, err
 	}
 
 	reqID := req.Resolution_ID
 
-	err := r.db.Model(&ds.Fine_Resolutions{}).Where("Resolution_id = ?", reqID).Count(&count).Error
+	err = r.db.Model(&ds.Fine_Resolutions{}).Where("Resolution_id = ?", reqID).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -109,8 +114,7 @@ func (r *Repository) DeleteFine(id int) error {
 	return nil
 }
 
-func (r *Repository) AddFinesToResolution(userID, fineID int) error {
-	// Поиск существующей заявки пользователя со статусом 'черновик'
+func (r *Repository) AddFinesToResolution(userID, fineID int) (int, error) {
 	var draftRequest ds.Resolutions
 	err := r.db.Where("user_id = ? AND status = ?", userID, ds.DraftStatus).First(&draftRequest).Error
 
@@ -125,32 +129,31 @@ func (r *Repository) AddFinesToResolution(userID, fineID int) error {
 		// Создание новой записи
 		err = r.db.Create(&draftRequest).Error
 		if err != nil {
-			return fmt.Errorf("error creating new draft request: %w", err)
+			return 0, fmt.Errorf("error creating new draft request: %w", err)
 		}
 
 		r.logger.Infof("Created new draft request ID: %d for user ID: %d", draftRequest.Resolution_ID, userID)
 	} else if err != nil {
-		// Если произошла ошибка запроса, возвращаем её
-		return fmt.Errorf("error fetching draft request: %w", err)
+		return 0, fmt.Errorf("error fetching draft request: %w", err)
 	} else {
 		r.logger.Infof("Found existing draft request ID: %d for user ID: %d", draftRequest.Resolution_ID, userID)
 	}
 
-	// Добавляем элемент в существующую заявку (или новую)
+	// Добавляем штраф в заявку
 	fineRes := ds.Fine_Resolutions{
 		Fine_ID:       fineID,
 		Resolution_ID: draftRequest.Resolution_ID,
 	}
 
-	// Вставляем в базу данных
 	err = r.db.Create(&fineRes).Error
 	if err != nil {
-		return fmt.Errorf("error linking fine to draft request: %w", err)
+		return 0, fmt.Errorf("error linking fine to draft request: %w", err)
 	}
 
 	r.logger.Infof("Fine ID: %d successfully added to Resolution ID: %d", fineID, draftRequest.Resolution_ID)
 
-	return nil
+	// ✅ Возвращаем resId
+	return draftRequest.Resolution_ID, nil
 }
 
 func (r *Repository) ResolutionsList(dateFrom, dateTo *time.Time, status string) (*[]models.ResForAll, error) {
@@ -213,8 +216,9 @@ func (r *Repository) GetResByID(resID int) (*models.ResWithFines, error) {
 
 		// Создаём объект FinesWithCount и добавляем его в результат
 		fineCount := models.FineWithCount{
-			Fine:  &fine,
-			Count: fineRes.Number, // Используем поле Number из finesResolution
+			Fine:       &fine,
+			Count:      fineRes.Number, // Используем поле Number из finesResolution
+			Fin_res_ID: fineRes.Fin_Res_ID,
 		}
 		finesWithCount = append(finesWithCount, fineCount)
 	}
@@ -415,23 +419,23 @@ func (r *Repository) UpdateUser(user *ds.Users) (*ds.Users, error) {
 	return user, nil
 }
 
-func (r *Repository) LoginUser(login, password string) (string, error) {
+func (r *Repository) LoginUser(login, password string) (string, bool, error) {
 	var user ds.Users
 	// сперва проверим по логину
 	if err := r.db.Where("login = ?", login).First(&user).Error; err != nil {
-		return "", errors.New("user does not exist")
+		return "", false, errors.New("user does not exist")
 
 	}
 	if user.Password != password {
-		return "", errors.New("incorrect password")
+		return "", false, errors.New("incorrect password")
 	}
 
 	token, err := GenerateJWTToken(user.User_ID, user.IsAdmin)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
-	return token, nil
+	return token, user.IsAdmin, nil
 }
 
 func (r *Repository) LogoutUser(userID int, token string) error {
