@@ -113,7 +113,7 @@ func (h *Handler) FinesByID(ctx *gin.Context) {
 // @Success 201 {object} ds.Fines
 // @Failure 400 {object} map[string]string "Bad Request"
 // @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /fine/create/{id} [post]
+// @Router /fine/create [post]
 func (h *Handler) CreateFines(ctx *gin.Context) {
 	var request *ds.Fines
 	err := ctx.BindJSON(&request)
