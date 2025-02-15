@@ -10,12 +10,6 @@ INSERT INTO fines (title, Full_inf, price, imge, dop_inf) VALUES
 INSERT INTO users (login, password, is_admin)
 VALUES
     ('denis', 'denis', false),
-    ('denisAdm', 'denisAd', true);
+    ('admin', 'admin', true);
 
-
-INSERT INTO fine_resolutions (resolution_id, fine_id, number)
-VALUES
-    (1, 1, 1),
-    (2, 2, 2),
-    (3, 3, 3);
 

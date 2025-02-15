@@ -27,6 +27,7 @@ type ResForAll struct {
 	Car_License_Plate string
 	User              string
 	Head_Of_Depart    string
+	Qr                string
 }
 
 type ResWithFines struct {

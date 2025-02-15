@@ -15,6 +15,7 @@ type Resolutions struct {
 	Car_License_Plate string `gorm:"type:varchar(255)"`
 	Total_Price       int    `gorm:"type:int"`
 	Sale              bool   `gorm:"type:bool"`
+	Qr                string `gorm:"type:text"`
 }
 
 const (

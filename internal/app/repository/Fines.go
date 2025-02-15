@@ -163,7 +163,7 @@ func (r *Repository) ResolutionsList(dateFrom, dateTo *time.Time, status string)
 	query := r.db.Table("resolutions").
 		Select(`resolutions.resolution_id, resolutions.status, resolutions.date_created, resolutions.date_formed, 
                 resolutions.date_done, resolutions.car_license_plate, 
-                users_login.login as user, head_login.login as head_of_depart`).
+                users_login.login as user, head_login.login as head_of_depart, resolutions.qr`).
 		Joins("LEFT JOIN users AS users_login ON users_login.user_id = resolutions.user_id").
 		Joins("LEFT JOIN users AS head_login ON head_login.user_id = resolutions.head_of_depart_id")
 
@@ -287,7 +287,7 @@ func (r *Repository) SetStatusByAdmin(resID int, status string) (*ds.Resolutions
 			return nil, err
 		}
 
-		totalPrice += fine.Price * fineRes.Number
+		totalPrice += fine.Price
 	}
 
 	if rand.Intn(2) == 0 {

@@ -3,6 +3,7 @@ package handler
 import (
 	"RIP/internal/app/ds"
 	"RIP/internal/app/models"
+	"RIP/internal/app/services"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"path/filepath"
@@ -383,6 +384,7 @@ func (h *Handler) SetStatusByUser(ctx *gin.Context) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /resolution/complete/ [put]
 func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
+	// Получаем id из параметров URL и преобразуем в число
 	resID, err := strconv.Atoi(ctx.Param("id"))
 	newStatus := ds.ApprovedStatus
 	if err != nil {
@@ -392,7 +394,26 @@ func (h *Handler) SetStatusByAdmin(ctx *gin.Context) {
 		return
 	}
 
+	// Обновляем статус в репозитории и получаем обновлённую структуру ds.Resolutions
 	result, err := h.Repository.SetStatusByAdmin(resID, newStatus)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Генерируем QR‑код для обновлённого заказа
+	qrCode, err := services.GenerateResolutionQR(*result)
+	println(qrCode)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка генерации QR-кода: " + err.Error(),
+		})
+		return
+	}
+	result.Qr = qrCode
+	_, err = h.Repository.UpdateRes(result)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
