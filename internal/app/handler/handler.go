@@ -62,7 +62,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.POST(FineDomain+"/add/:id", h.RoleMiddleware(UserRole, AdminRole), h.AddFinesToResolution) // Добавление штрафа в последнее постановление
 
 	// домен заявки /Resolutions
-	router.GET(ResolutionDomain, h.RoleMiddleware(AdminRole), h.AllResolutions)                              // Список постановлений
+	router.GET(ResolutionDomain, h.RoleMiddleware(AdminRole, UserRole), h.AllResolutions)                    // Список постановлений
 	router.GET(ResolutionDomain+"/:id", h.RoleMiddleware(AdminRole, UserRole), h.ResolutionByID)             // Постановление по ID
 	router.PUT(ResolutionDomain+"/update/:id", h.RoleMiddleware(AdminRole, UserRole), h.UpdateResolution)    // Редактирование постановления
 	router.PUT(ResolutionDomain+"/form", h.RoleMiddleware(UserRole, AdminRole), h.SetStatusByUser)           // Изменение статуса создателем
